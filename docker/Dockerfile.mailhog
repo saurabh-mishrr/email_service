@@ -1,0 +1,3 @@
+FROM mailhog/mailhog
+
+WORKDIR /maildir

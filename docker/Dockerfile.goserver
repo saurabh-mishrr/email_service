@@ -1,0 +1,8 @@
+FROM golang:1.14
+WORKDIR /go/src/app
+ENV GIN_PORT=5673
+RUN apt-get update && apt-get install git awscli -y
+COPY app .
+RUN go get github.com/codegangsta/gin
+RUN go get -d -v ./...
+RUN go install -v ./...

@@ -1,0 +1,44 @@
+version: "3.5"
+services:
+  rabbitmq:
+    container_name: "email-service"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.rabbitmq
+    image: "cactus-rabbitmq:latest"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.49
+      - RABBITMQ_ERLANG_COOKIE=e2b7240d98ad33a34b06d3464372a5fb
+    networks:
+      rabbitmq_net:
+        ipv4_address: 172.16.238.10
+
+  goserver:
+    container_name: "goserver"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.goserver
+    image: "cactus-go-server:latest"
+    working_dir: /go/src/app
+    command: ["gin", "run", "main.go"]
+    volumes:
+      - "./app:/go/src/app:rw"
+    ports:
+      - "5673:5673"
+    environment:
+      - GOOS=linux
+      - GOARCH=amd64
+    networks:
+      rabbitmq_net:
+        ipv4_address: 172.16.238.11
+
+networks:
+  rabbitmq_net:
+    name: rabbitmq_net
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"
