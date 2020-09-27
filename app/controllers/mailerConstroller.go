@@ -6,12 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	//"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kataras/go-mailer"
 	"github.com/streadway/amqp"
-
+	"gopkg.in/gomail.v2"
 )
 
 func failOnError(err error, msg string) {
@@ -22,30 +20,39 @@ func failOnError(err error, msg string) {
 
 func Produce(c *gin.Context) {
 	mailPort, _ := strconv.Atoi(helpers.DotEnvVal("MAIL_PORT"))
-	mailerConfig := mailer.Config{
-		Host: helpers.DotEnvVal("MAIL_HOST"),
-		Port: mailPort,
-		Username: helpers.DotEnvVal("MAIL_USERNAME"),
-		Password: helpers.DotEnvVal("MAIL_PASSWORD"),
-		FromAddr: helpers.DotEnvVal("MAIL_USERNAME"),
-		FromAlias: helpers.DotEnvVal("MAIL_NAME"),
-		UseCommand: false,
-	}
+	/*
+		mailerConfig := mailer.Config{
+			Host: helpers.DotEnvVal("MAIL_HOST"),
+			Port: mailPort,
+			Username: helpers.DotEnvVal("MAIL_USERNAME"),
+			Password: helpers.DotEnvVal("MAIL_PASSWORD"),
+			FromAddr: helpers.DotEnvVal("MAIL_USERNAME"),
+			FromAlias: helpers.DotEnvVal("MAIL_NAME"),
+			UseCommand: false,
+		}
 
-	sender := mailer.New(mailerConfig)
+		sender := mailer.New(mailerConfig) */
 
 	subject := "Dummy Mail"
 
 	content := `<h1>Hello</h1> <br/><br/> <span style="color:red"> This is the rich message body </span>`
 
-	to := []string{"test1@mailhog.local"}
+	// to := []string{"test1@mailhog.local"}
 
-	err := sender.Send(subject, content, to...)
+	// err := sender.Send(subject, content, to...)
 
+	m := gomail.NewMessage()
+	m.SetHeader("From", helpers.DotEnvVal("MAIL_USERNAME"))
+	m.SetHeader("To", "test1@mailhog.local")
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", content)
+
+	d := gomail.Dialer{Host: helpers.DotEnvVal("MAIL_HOST"), Port: mailPort}
+	err := d.DialAndSend(m)
 	if err != nil {
-		println("error while sending the e-mail: " + err.Error())
+		panic(err)
+		//fmt.Println("error while sending the e-mail: " + err.Error())
 	}
-
 
 	//c.BindJSON(data)
 	//body, _ := ioutil.ReadAll(c.Request.Body)
